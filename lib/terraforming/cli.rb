@@ -1,5 +1,6 @@
 module Terraforming
   class CLI < Thor
+    class_option :match, type: :string, desc: "Match only resources with this regex pattern"
     class_option :merge, type: :string, desc: "tfstate file to merge"
     class_option :overwrite, type: :boolean, desc: "Overwrite existing tfstate"
     class_option :tfstate, type: :boolean, desc: "Generate tfstate"
@@ -260,13 +261,13 @@ module Terraforming
     end
 
     def tf(klass)
-      klass.tf
+      klass.tf(options[:match])
     end
 
     def tfstate(klass, tfstate_path)
       tfstate = tfstate_path ? MultiJson.load(open(tfstate_path).read) : tfstate_skeleton
       tfstate["serial"] = tfstate["serial"] + 1
-      tfstate["modules"][0]["resources"] = tfstate["modules"][0]["resources"].merge(klass.tfstate)
+      tfstate["modules"][0]["resources"] = tfstate["modules"][0]["resources"].merge(klass.tfstate(options[:match]))
       MultiJson.encode(tfstate, pretty: true)
     end
 
